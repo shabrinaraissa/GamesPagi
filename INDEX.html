@@ -1,0 +1,401 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Menu Info Acara</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: meniru aplikasi streaming. Header transparan, billboard poster, pill kategori, baris Top 10 / Lanjutkan Menonton / poster, bottom nav, halaman detail ala halaman judul. Satu tampilan gelap yang disengaja. */
+:root{
+  --bg:#141414; --surface:#1f1f1f; --surface-2:#2b2b2b; --fg:#ffffff; --muted:#b3b3b3; --line:#333333;
+  --accent:#e50914; --ok:#46d369; --play-bg:#ffffff; --play-fg:#000000; --scrim:rgba(0,0,0,.75);
+  --f-display:'Bebas Neue','Impact','Arial Narrow',sans-serif;
+  --f-body:'Roboto',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0 96px;overflow-x:hidden}
+body.lock{overflow:hidden}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--bg)}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:15;margin:0 calc(-1*max(16px,env(safe-area-inset-left,0px))) 0 calc(-1*max(16px,env(safe-area-inset-left,0px)));
+  padding:10px max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px));
+  display:flex;align-items:center;justify-content:space-between;background:linear-gradient(var(--bg) 40%,rgba(20,20,20,0))}
+.logo{font-family:var(--f-display);font-size:34px;letter-spacing:.03em;color:var(--accent);line-height:1}
+.avatar{width:30px;height:30px;border-radius:6px;background:#2f6fe4;display:grid;place-items:center;font-size:17px}
+.pills{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:4px 16px 12px 0;margin-right:calc(-1*max(16px,env(safe-area-inset-right,0px)))}
+.pills::-webkit-scrollbar{display:none}
+.pill{flex:none;border:1px solid #6b6b6b;border-radius:999px;padding:6px 14px;font-size:14px;color:var(--fg)}
+.pill[aria-pressed="true"]{background:var(--fg);color:#000;border-color:var(--fg);font-weight:500}
+
+/* hero */
+.hero{position:relative;border-radius:10px;overflow:hidden;aspect-ratio:4/5;max-height:470px;width:100%;margin-bottom:18px;
+  background:linear-gradient(160deg,hsl(var(--h) 80% 48%),hsl(calc(var(--h) + 50) 70% 18%))}
+.hero .art{position:absolute;inset:0 0 38% 0;display:grid;place-items:center;font-size:clamp(100px,34vw,170px);filter:drop-shadow(0 10px 24px rgba(0,0,0,.4))}
+.hero .shade{position:absolute;inset:0;background:linear-gradient(transparent 38%,rgba(0,0,0,.92))}
+.hero .txt{position:absolute;left:0;right:0;bottom:0;padding:16px;display:grid;gap:10px;justify-items:center;text-align:center}
+.hero .mark{font-size:11px;letter-spacing:.18em;font-weight:700;color:var(--muted)}
+.hero .mark b{color:var(--accent)}
+.hero h1{margin:0;font-family:var(--f-display);font-weight:400;font-size:48px;line-height:.95;letter-spacing:.02em;text-wrap:balance}
+.tags{font-size:12.5px;color:var(--fg);display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.tags span+span::before{content:"•";margin-right:8px;color:var(--muted)}
+.acts{display:flex;gap:10px;width:100%}
+.btn-play,.btn-sec{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:6px;padding:10px 12px;font-weight:700;font-size:15px;min-height:42px;text-decoration:none}
+.btn-play{background:var(--play-bg);color:var(--play-fg)}
+.btn-sec{background:rgba(109,109,110,.7);color:var(--fg)}
+
+/* rows */
+.row{margin-bottom:22px}
+.row[hidden]{display:none}
+.row h2{font-size:17px;font-weight:700;margin:0 0 10px}
+.rail{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;padding:0 16px 4px 0;margin-right:calc(-1*max(16px,env(safe-area-inset-right,0px)));scrollbar-width:none}
+.rail::-webkit-scrollbar{display:none}
+.card{flex:0 0 auto;scroll-snap-align:start;text-align:left;display:block}
+.poster{position:relative;width:112px;aspect-ratio:2/3;border-radius:5px;overflow:hidden;color:var(--fg);
+  background:linear-gradient(165deg,hsl(var(--h) 78% 46%),hsl(calc(var(--h) + 50) 65% 16%))}
+.poster .i{position:absolute;top:6px;left:7px;font-family:var(--f-display);font-size:18px;color:var(--accent);line-height:1}
+.poster .em{position:absolute;inset:0 0 34% 0;display:grid;place-items:center;font-size:46px}
+.poster .nm{position:absolute;left:0;right:0;bottom:0;padding:22px 8px 8px;background:linear-gradient(transparent,rgba(0,0,0,.85));
+  font-family:var(--f-display);font-size:21px;line-height:.95;letter-spacing:.02em;overflow-wrap:anywhere}
+.new{position:absolute;left:50%;bottom:0;transform:translateX(-50%);background:var(--accent);font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:3px 3px 0 0;letter-spacing:.04em;white-space:nowrap;z-index:2}
+.card:active{opacity:.75}
+
+/* top 10 */
+.t10{display:flex;align-items:flex-end}
+.t10 .n{font-family:var(--f-display);font-size:128px;line-height:.8;width:56px;flex:none;text-align:right;margin-right:-10px;
+  color:var(--bg);-webkit-text-stroke:3px #777;position:relative;z-index:0;letter-spacing:-.05em}
+.t10 .poster{z-index:1}
+
+/* continue watching */
+.wide{width:208px}
+.wide .thumb{position:relative;aspect-ratio:16/9;border-radius:5px 5px 0 0;overflow:hidden;display:grid;place-items:center;font-size:44px;
+  background:linear-gradient(150deg,hsl(var(--h) 78% 46%),hsl(calc(var(--h) + 50) 65% 16%))}
+.wide .play{position:absolute;inset:0;display:grid;place-items:center}
+.wide .play i{width:38px;height:38px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.45);display:grid;place-items:center;font-style:normal;font-size:15px;padding-left:3px}
+.wide .thumb .em{position:absolute;left:10px;top:6px;font-size:22px}
+.bar{height:3px;background:#4d4d4d}
+.bar i{display:block;height:100%;width:0;background:var(--accent)}
+.wide .meta{background:var(--surface);padding:8px 10px;border-radius:0 0 5px 5px;display:grid;gap:2px}
+.wide .meta b{font-size:13.5px}
+.wide .meta span{font-size:12px;color:var(--muted)}
+
+/* bottom nav */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:46;background:#0d0d0d;border-top:1px solid #222;display:flex;justify-content:space-around;
+  padding:8px max(16px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.nav button{flex:1;display:grid;justify-items:center;gap:2px;font-size:10.5px;color:var(--muted);padding:2px}
+.nav button .ic{font-size:21px;line-height:1.1}
+.nav button[aria-current="true"]{color:var(--fg)}
+
+/* sheet (halaman judul) */
+.backdrop{position:fixed;inset:0;background:var(--scrim);opacity:0;pointer-events:none;transition:opacity .2s;z-index:50}
+.backdrop.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:60;height:94%;max-width:640px;margin:0 auto;background:var(--surface);border-radius:12px 12px 0 0;
+  transform:translateY(105%);transition:transform .28s ease;display:flex;flex-direction:column;overflow:hidden}
+.sheet.on{transform:none}
+.s-scroll{overflow-y:auto;flex:1;padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))}
+.s-art{position:relative;aspect-ratio:16/10;display:grid;place-items:center;font-size:84px;
+  background:linear-gradient(150deg,hsl(var(--h) 80% 46%),hsl(calc(var(--h) + 50) 65% 15%))}
+.s-art::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 55%,var(--surface))}
+.s-art .em{position:relative;z-index:1;filter:drop-shadow(0 8px 18px rgba(0,0,0,.4))}
+.x{position:absolute;top:10px;right:max(12px,env(safe-area-inset-right,0px));z-index:3;width:34px;height:34px;border-radius:50%;background:rgba(20,20,20,.75);font-size:16px}
+.s-in{padding:0 max(16px,env(safe-area-inset-left,0px)) 0;display:grid;gap:16px;margin-top:-6px}
+.s-in h3{margin:0;font-family:var(--f-display);font-weight:400;font-size:40px;line-height:.95;letter-spacing:.02em}
+.metaln{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:13px;color:var(--muted);align-items:center}
+.metaln .ok{color:var(--ok);font-weight:700}
+.metaln .age{border:1px solid #777;padding:0 5px;font-size:11px;border-radius:2px}
+.s-in .acts{flex-direction:column}
+.blk{display:grid;gap:8px;min-width:0}
+.blk h4{margin:0;font-size:16px;font-weight:700}
+.blk p{margin:0;color:#d9d9d9}
+.list{margin:0;padding:0;list-style:none;display:grid}
+.list li{padding:10px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere;display:flex;gap:10px}
+.list li::before{content:"▸";color:var(--accent)}
+.ep{display:grid;gap:0}
+.ep div{display:grid;grid-template-columns:70px 1fr;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.ep b{font-family:var(--f-display);font-weight:400;font-size:24px;letter-spacing:.03em;color:var(--fg);background:var(--surface-2);border-radius:4px;text-align:center;padding:6px 2px;line-height:1.1;overflow-wrap:anywhere}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;margin:0}
+.kv dt{color:var(--muted);font-size:13.5px}.kv dd{margin:0;overflow-wrap:anywhere}
+.note{background:var(--surface-2);border-left:3px solid var(--accent);border-radius:4px;padding:10px 12px;font-size:14px}
+.lnk{display:flex;justify-content:space-between;align-items:center;gap:10px;text-decoration:none;color:var(--fg);background:var(--surface-2);border-radius:6px;padding:13px 14px;font-weight:700}
+.lnk small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.lnk.off{opacity:.55;pointer-events:none}
+.search{width:100%;background:var(--surface-2);border:0;border-radius:6px;color:var(--fg);padding:12px 14px;font:inherit}
+.search::placeholder{color:var(--muted)}
+.grp{background:var(--surface-2);border-radius:6px;padding:12px;display:grid;gap:4px}
+.grp b{font-family:var(--f-display);font-weight:400;font-size:21px;letter-spacing:.03em}
+.grp span{color:#d0d0d0;font-size:14px;overflow-wrap:anywhere}
+.grp mark{background:var(--accent);color:#fff;border-radius:2px;padding:0 2px}
+.empty{color:var(--muted);font-size:14px;margin:0}
+.lock-card{width:100%;background:var(--surface-2);border:2px dashed #555;border-radius:8px;padding:16px;display:grid;gap:6px;justify-items:center;text-align:center}
+.lock-card .em{font-size:32px}
+.sw{display:flex;gap:10px;flex-wrap:wrap}
+.sw div{display:grid;gap:4px;justify-items:center;font-size:12px;color:var(--muted)}
+.sw i{width:52px;height:52px;border-radius:8px;display:block;border:1px solid #444}
+.more{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.more .poster{width:100%}
+
+/* search overlay */
+.srch{position:fixed;inset:0;z-index:45;background:var(--bg);transform:translateY(100%);transition:transform .22s;display:flex;flex-direction:column;
+  padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))}
+.srch.on{transform:none}
+.srch .res{overflow-y:auto;flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;align-content:start;padding:14px 0 100px}
+.srch .res .poster{width:100%}
+.srch .empty{grid-column:1/-1}
+
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:#fff;color:#000;border-radius:6px;padding:10px 14px;font-size:14px;z-index:80;opacity:0;pointer-events:none;transition:.2s;max-width:88%;text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+@media (min-width:700px){.poster{width:140px}.wide{width:260px}.sheet{border-radius:12px;bottom:3%;height:92%}.hero{aspect-ratio:16/9;max-height:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header class="top">
+  <div class="logo" id="logo">INFO-FLIX</div>
+  <div class="avatar" aria-label="Profil" id="avatar">😎</div>
+</header>
+<div class="pills" id="pills" role="group" aria-label="Kategori"></div>
+
+<section class="hero" id="hero" aria-label="Sorotan"></section>
+<main id="rows"></main>
+
+<nav class="nav" aria-label="Menu utama">
+  <button type="button" id="nHome" aria-current="true"><span class="ic">🏠</span>Beranda</button>
+  <button type="button" id="nSearch"><span class="ic">🔍</span>Cari</button>
+  <button type="button" id="nNews"><span class="ic">📣</span>Kabar</button>
+</nav>
+
+<div class="srch" id="srch" aria-hidden="true">
+  <input class="search" id="srchIn" type="search" placeholder="Cari judul, nama, bus, kamar..." aria-label="Cari">
+  <div class="res" id="srchRes"></div>
+</div>
+
+<div class="backdrop" id="backdrop"></div>
+<aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sTitle" aria-hidden="true">
+  <div class="s-scroll" id="sScroll">
+    <div class="s-art" id="sArt"><button class="x" type="button" id="sClose" aria-label="Tutup">✕</button><span class="em" id="sEm"></span></div>
+    <div class="s-in" id="sIn"></div>
+  </div>
+</aside>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ============ ISI DI SINI ============
+   Teks bertanda [ISI] adalah contoh. Ganti langsung di EVENT dan ITEMS.
+   Blok: p, list, timeline, kv, note, links, groups, swatches, secret */
+var EVENT = { name:"[Nama Acara]", date:"[Tanggal acara]", hero:"tema", avatar:"😎" };
+
+var ITEMS = [
+ { id:"tema", em:"🎯", h:352, title:"Tema Besar", cap:"Kita ngapain sih sebenarnya", badge:"Baru", tags:["Wajib baca","Seru","2 menit"], meta:"Dibaca dulu ya", blocks:[
+   {t:"p", text:"[ISI] Tema besar acara dan makna singkatnya. Satu atau dua kalimat cukup."},
+   {t:"list", h:"Kata kunci", items:["[ISI] Kata kunci 1","[ISI] Kata kunci 2","[ISI] Kata kunci 3"]},
+   {t:"note", text:"Semua kegiatan hari itu (kostum, lomba, VB, tagline) nyambung ke tema ini."} ]},
+ { id:"dress", em:"👗", h:32, title:"Dress Code", cap:"Kostum apa, kapan dipakai", tags:["Wajib","Ganti 2x"], meta:"Cek sebelum packing", blocks:[
+   {t:"p", text:"[ISI] Penjelasan singkat dress code dan alasannya."},
+   {t:"kv", h:"Kapan pakai apa", items:[["Sesi siang","[ISI] kostum untuk Bu GBI"],["Sore","[ISI] ganti ke ..."],["Malam","[ISI] dress code malam"]]},
+   {t:"swatches", h:"Palet warna", items:[["Utama","#e50914"],["Aksen","#f2a900"],["Netral","#222222"]]},
+   {t:"list", h:"Boleh", items:["[ISI] contoh yang boleh"]},
+   {t:"list", h:"Jangan", items:["[ISI] contoh yang jangan"]} ]},
+ { id:"agenda", em:"🗓️", h:205, title:"Agenda", cap:"Dari siang sampai malam", tags:["Seharian","Ada Bu GBI"], meta:"Jangan sampai telat", blocks:[
+   {t:"note", text:"Siang ada kunjungan Bu GBI. Pakai kostum sesuai kolom Dress Code."},
+   {t:"timeline", h:"Susunan acara", items:[
+     ["[ISI] 07.00","Kumpul dan sarapan"],
+     ["[ISI] 09.00","Opening"],
+     ["[ISI] 12.00","Kedatangan Bu GBI, wajib siap kostum"],
+     ["[ISI] 13.00","Makan siang dan ganti kostum"],
+     ["[ISI] 15.00","Amazing Race"],
+     ["[ISI] 19.00","Dinner dan pengumuman"],
+     ["[ISI] 21.00","Penutup"]]} ]},
+ { id:"gub", em:"💃", h:312, title:"Acara Bu Gub", cap:"Line dance, lagu, video tutorial", badge:"Latihan dulu", tags:["Line dance","Semua ikut"], meta:"Latihan 10 menit per hari", blocks:[
+   {t:"p", text:"[ISI] Peran semua peserta di acara Bu Gub, misalnya line dance bersama."},
+   {t:"links", h:"Video tutorial line dance (versi DMR)", items:[["Tonton rekaman tutorial","#","[ISI] tempel link video"]]},
+   {t:"list", h:"Yang harus dikerjakan", items:["[ISI] Tonton video tutorial sebelum hari-H","[ISI] Hafalkan gerakan","[ISI] Standby di posisi jam ..."]},
+   {t:"list", h:"Lagu yang dibawakan", items:["[ISI] Judul lagu 1 - artis","[ISI] Judul lagu 2 - artis"]},
+   {t:"note", text:"Tips: jangan latihan semalam sebelumnya, mulai dari sekarang."} ]},
+ { id:"race", em:"🏁", h:148, title:"Amazing Race", cap:"Kelompok, misi, spek video", tags:["Tim","Kompetitif","Video"], meta:"Siapkan stamina", blocks:[
+   {t:"p", text:"[ISI] Gambaran umum: tiap kelompok menyelesaikan misi di beberapa pos dan mengumpulkan poin."},
+   {t:"list", h:"Yang harus dikerjakan", items:["[ISI] Kumpul sesuai kelompok","[ISI] Selesaikan misi di tiap pos","[ISI] Rekam video tiap misi","[ISI] Kembali ke garis finis sebelum jam ..."]},
+   {t:"kv", h:"Spek video", items:[["Durasi","[ISI] maks. ... menit"],["Orientasi","[ISI] vertikal / horizontal"],["Format","[ISI] mp4"],["Ukuran","[ISI] maks. ... MB"]]},
+   {t:"links", items:[["Panduan lengkap Amazing Race","#","[ISI] opsional"]]},
+   {t:"groups", h:"Pembagian kelompok", search:true, items:[
+     {name:"Kelompok 1 [ISI nama tim]", info:"[ISI] Nama A, Nama B, Nama C"},
+     {name:"Kelompok 2 [ISI nama tim]", info:"[ISI] Nama D, Nama E, Nama F"}]} ]},
+ { id:"survey", em:"🏆", h:42, title:"Survey Ter-ter", cap:"Pilih yang paling ter-ter", badge:"Isi dulu", task:true, tags:["Tugas","5 menit"], meta:"Deadline [ISI]", blocks:[
+   {t:"p", text:"Pilih teman paling ter-ter versi kamu. Hasilnya diumumkan di acara."},
+   {t:"links", items:[["Isi survey sekarang","#","[ISI] tempel link survey"]]},
+   {t:"kv", items:[["Deadline","[ISI] tanggal dan jam"]]} ]},
+ { id:"upload", em:"🎥", h:268, title:"Upload VB & Tagline", cap:"Video background dan tagline", badge:"Isi dulu", task:true, tags:["Tugas","Upload"], meta:"Deadline [ISI]", blocks:[
+   {t:"p", text:"Kumpulkan video background (VB) dan tagline lewat link di bawah."},
+   {t:"links", items:[["Upload VB","#","[ISI] tempel link upload"],["Kirim tagline","#","[ISI] tempel link form"]]},
+   {t:"kv", items:[["Deadline","[ISI] tanggal dan jam"],["Spek VB","[ISI] durasi / format"],["Tagline","[ISI] maks. ... kata"]]} ]},
+ { id:"bus", em:"🚌", h:195, title:"Pembagian Bus", cap:"Cari namamu", tags:["Logistik","Cek nama"], meta:"Naik bus yang benar", blocks:[
+   {t:"kv", items:[["Kumpul","[ISI] lokasi dan jam"],["Berangkat","[ISI] jam"]]},
+   {t:"groups", h:"Daftar bus", search:true, items:[
+     {name:"Bus 1", info:"[ISI] Nama A, Nama B, Nama C"},
+     {name:"Bus 2", info:"[ISI] Nama D, Nama E, Nama F"}]} ]},
+ { id:"stay", em:"🛏️", h:172, title:"Akomodasi", cap:"Hotel, kamar, teman sekamar", tags:["Logistik","Kamar"], meta:"Check-in [ISI]", blocks:[
+   {t:"kv", items:[["Hotel","[ISI] nama hotel"],["Alamat","[ISI] alamat"],["Check-in","[ISI] jam"],["Check-out","[ISI] jam"]]},
+   {t:"links", items:[["Buka di peta","#","[ISI] link Google Maps"]]},
+   {t:"groups", h:"Pembagian kamar", search:true, items:[
+     {name:"Kamar 101", info:"[ISI] Nama A, Nama B"},
+     {name:"Kamar 102", info:"[ISI] Nama C, Nama D"}]} ]},
+ { id:"news", em:"📣", h:18, title:"Pengumuman", cap:"Kategori yang akan diumumkan", badge:"Ssst", tags:["Kabar","Ada yang rahasia"], meta:"Dibuka di acara", blocks:[
+   {t:"p", text:"Daftar pengumuman yang akan dibuka di acara. Sebagian masih rahasia."},
+   {t:"list", h:"Kategori", items:["[ISI] Juara Amazing Race","[ISI] Hasil Survey Ter-ter","[ISI] Best Dressed","[ISI] Video dan tagline terbaik","[ISI] Doorprize"]},
+   {t:"secret", title:"Hadiah spesial", reveal:"Ssst, belum boleh dibuka. Tunggu di acara ya 🤫"} ]}
+];
+
+/* Baris di beranda. cat: acara / tugas / logistik / kabar. style: top10 / poster / wide */
+var ROWS = [
+ { title:"Top 10 yang Wajib Kamu Tahu", cat:"acara", style:"top10", ids:["tema","dress","agenda","gub","race"] },
+ { title:"Lanjutkan Menonton", cat:"tugas", style:"wide", ids:["survey","upload"] },
+ { title:"Panggung dan Lomba", cat:"acara", style:"poster", ids:["gub","race","agenda"] },
+ { title:"Perjalanan dan Menginap", cat:"logistik", style:"poster", ids:["bus","stay"] },
+ { title:"Baru Dirilis", cat:"kabar", style:"poster", ids:["news","tema"] }
+];
+var PILLS = [["all","Semua"],["acara","Acara"],["tugas","Tugas"],["logistik","Logistik"],["kabar","Pengumuman"]];
+/* ============ SELESAI ============ */
+
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  function el(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+  var BY={};ITEMS.forEach(function(i){BY[i.id]=i});
+  $('avatar').textContent=EVENT.avatar;
+
+  /* progres tugas, hanya di browser ini */
+  var done={};
+  try{done=JSON.parse(localStorage.getItem('infoflix-done')||'{}')}catch(e){}
+  function saveDone(){try{localStorage.setItem('infoflix-done',JSON.stringify(done))}catch(e){}}
+
+  var toastT;
+  function toast(m){var t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('on')},2200)}
+
+  function firstLink(it){
+    for(var i=0;i<it.blocks.length;i++){var b=it.blocks[i];if(b.t==='links'){return b.items[0]}}return null}
+
+  function poster(it,extraCls){
+    var p=el('div','poster '+(extraCls||''));p.style.setProperty('--h',it.h);
+    p.appendChild(el('span','i','I'));p.appendChild(el('span','em',it.em));p.appendChild(el('span','nm',it.title));
+    if(it.badge)p.appendChild(el('span','new',it.badge));
+    return p}
+  function cardBtn(it,inner){var b=el('button','card');b.type='button';b.setAttribute('aria-label','Buka '+it.title);b.appendChild(inner);b.onclick=function(){openSheet(it.id)};return b}
+
+  /* hero */
+  (function(){
+    var it=BY[EVENT.hero],h=$('hero');h.style.setProperty('--h',it.h);
+    h.appendChild(el('div','art',it.em));h.appendChild(el('div','shade'));
+    var t=el('div','txt');
+    var m=el('div','mark');m.innerHTML='<b>I</b> ACARA ';m.appendChild(document.createTextNode(EVENT.name.toUpperCase()+' · '+EVENT.date.toUpperCase()));t.appendChild(m);
+    t.appendChild(el('h1',null,it.title));
+    var tg=el('div','tags');it.tags.forEach(function(x){tg.appendChild(el('span',null,x))});t.appendChild(tg);
+    var a=el('div','acts');
+    var p=el('button','btn-play','▶ Buka');p.type='button';p.onclick=function(){openSheet(it.id)};
+    var s=el('button','btn-sec','🗓 Agenda');s.type='button';s.onclick=function(){openSheet('agenda')};
+    a.appendChild(p);a.appendChild(s);t.appendChild(a);h.appendChild(t);
+  })();
+
+  /* rows */
+  var rowsEl=$('rows'),rowNodes=[];
+  ROWS.forEach(function(r){
+    var sec=el('section','row');sec.appendChild(el('h2',null,r.title));
+    var rail=el('div','rail');
+    r.ids.forEach(function(id,idx){
+      var it=BY[id];
+      if(r.style==='top10'){
+        var w=el('div','t10');w.appendChild(el('span','n',String(idx+1)));w.appendChild(poster(it));
+        rail.appendChild(cardBtn(it,w));
+      }else if(r.style==='wide'){
+        var w=el('div','wide');var th=el('div','thumb');th.style.setProperty('--h',it.h);
+        th.appendChild(el('span','em',it.em));var pl=el('span','play');pl.appendChild(el('i',null,'▶'));th.appendChild(pl);w.appendChild(th);
+        var bar=el('div','bar');var fill=el('i');fill.dataset.id=id;fill.style.width=done[id]?'100%':'6%';bar.appendChild(fill);w.appendChild(bar);
+        var mt=el('div','meta');mt.appendChild(el('b',null,it.title));mt.appendChild(el('span',null,it.meta));w.appendChild(mt);
+        rail.appendChild(cardBtn(it,w));
+      }else{rail.appendChild(cardBtn(it,poster(it)))}
+    });
+    sec.appendChild(rail);rowsEl.appendChild(sec);rowNodes.push([r,sec]);
+  });
+  function refreshBars(){document.querySelectorAll('.bar i').forEach(function(f){f.style.width=done[f.dataset.id]?'100%':'6%'})}
+
+  /* pills */
+  var cat='all',pills=$('pills');
+  PILLS.forEach(function(p){var b=el('button','pill',p[1]);b.type='button';b.setAttribute('aria-pressed',p[0]==='all');
+    b.onclick=function(){cat=p[0];[].forEach.call(pills.children,function(c){c.setAttribute('aria-pressed',c===b)});
+      rowNodes.forEach(function(n){n[1].hidden=!(cat==='all'||n[0].cat===cat)});
+      $('hero').hidden=cat!=='all'};
+    pills.appendChild(b)});
+
+  /* blocks */
+  function render(blk){
+    var w=el('div','blk');
+    if(blk.h)w.appendChild(el('h4',null,blk.h));
+    if(blk.t==='p')w.appendChild(el('p',null,blk.text));
+    else if(blk.t==='note')w.appendChild(el('div','note',blk.text));
+    else if(blk.t==='list'){var u=el('ul','list');blk.items.forEach(function(x){u.appendChild(el('li',null,x))});w.appendChild(u)}
+    else if(blk.t==='timeline'){var t=el('div','ep');blk.items.forEach(function(x){var d=el('div');d.appendChild(el('b',null,x[0]));d.appendChild(el('span',null,x[1]));t.appendChild(d)});w.appendChild(t)}
+    else if(blk.t==='kv'){var l=el('dl','kv');blk.items.forEach(function(x){l.appendChild(el('dt',null,x[0]));l.appendChild(el('dd',null,x[1]))});w.appendChild(l)}
+    else if(blk.t==='links'){blk.items.forEach(function(x){
+      var ok=x[1]&&x[1]!=='#';var a=el('a','lnk'+(ok?'':' off'));if(ok){a.href=x[1];a.target='_blank';a.rel='noopener'}
+      var s=el('span');s.appendChild(document.createTextNode(ok?x[0]:x[0]+' (link belum tersedia)'));if(x[2]&&ok)s.appendChild(el('small',null,x[2]));
+      a.appendChild(s);a.appendChild(el('span',null,ok?'↗':'⏳'));w.appendChild(a)})}
+    else if(blk.t==='swatches'){var s=el('div','sw');blk.items.forEach(function(x){var c=el('div');var i=el('i');i.style.background=x[1];c.appendChild(i);c.appendChild(el('span',null,x[0]));s.appendChild(c)});w.appendChild(s)}
+    else if(blk.t==='secret'){var c=el('button','lock-card');c.type='button';c.appendChild(el('span','em','🔒'));c.appendChild(el('b',null,blk.title));c.appendChild(el('span',null,'Ketuk untuk intip'));
+      c.onclick=function(){c.replaceChildren(el('span','em','🤫'),el('span',null,blk.reveal))};w.appendChild(c)}
+    else if(blk.t==='groups'){
+      var q=null,box=el('div','blk');
+      if(blk.search){q=el('input','search');q.type='search';q.id='q'+Math.random().toString(36).slice(2,7);q.placeholder='Cari namamu...';q.setAttribute('aria-label','Cari nama');w.appendChild(q)}
+      var draw=function(){box.replaceChildren();var term=q?q.value.trim().toLowerCase():'';var n=0;
+        blk.items.forEach(function(g){if(term&&(g.name+' '+g.info).toLowerCase().indexOf(term)<0)return;n++;
+          var c=el('div','grp');c.appendChild(el('b',null,g.name));var sp=el('span');var i=term?g.info.toLowerCase().indexOf(term):-1;
+          if(i>=0){sp.appendChild(document.createTextNode(g.info.slice(0,i)));sp.appendChild(el('mark',null,g.info.slice(i,i+term.length)));sp.appendChild(document.createTextNode(g.info.slice(i+term.length)))}else sp.textContent=g.info;
+          c.appendChild(sp);box.appendChild(c)});
+        if(!n)box.appendChild(el('p','empty','Nama tidak ditemukan. Coba ejaan lain.'))};
+      if(q)q.oninput=draw;draw();w.appendChild(box)}
+    return w}
+
+  /* sheet */
+  var sheet=$('sheet'),back=$('backdrop'),lastFocus=null;
+  function openSheet(id){
+    var it=BY[id];if(!it)return;lastFocus=document.activeElement;
+    $('sEm').textContent=it.em;$('sArt').style.setProperty('--h',it.h);
+    var inn=$('sIn');inn.replaceChildren();
+    inn.appendChild(el('h3',null,it.title)).id='sTitle';
+    var ml=el('div','metaln');ml.appendChild(el('span','ok',it.task?'Wajib dikerjakan':'Wajib baca'));ml.appendChild(el('span',null,EVENT.date));ml.appendChild(el('span','age','SEMUA'));ml.appendChild(el('span',null,it.meta));inn.appendChild(ml);
+    var acts=el('div','acts');var fl=firstLink(it);
+    if(fl){var ok=fl[1]&&fl[1]!=='#';var p=el(ok?'a':'button','btn-play',ok?'▶ Buka link':'▶ Link belum tersedia');
+      if(ok){p.href=fl[1];p.target='_blank';p.rel='noopener'}else{p.type='button';p.onclick=function(){toast('Link belum diisi panitia')}}acts.appendChild(p)}
+    if(it.task){var d=el('button','btn-sec');d.type='button';
+      var upd=function(){d.textContent=done[it.id]?'✓ Sudah selesai':'＋ Tandai selesai'};upd();
+      d.onclick=function(){done[it.id]=!done[it.id];saveDone();upd();refreshBars();toast(done[it.id]?'Mantap, sudah ditandai':'Tanda dibatalkan')};acts.appendChild(d)}
+    if(acts.children.length)inn.appendChild(acts);
+    var tg=el('div','tags');it.tags.forEach(function(x){tg.appendChild(el('span',null,x))});inn.appendChild(tg);
+    it.blocks.forEach(function(b){inn.appendChild(render(b))});
+    var mo=ITEMS.filter(function(x){return x.id!==id}).slice(0,3);
+    var mw=el('div','blk');mw.appendChild(el('h4',null,'Tontonan lainnya'));var g=el('div','more');
+    mo.forEach(function(x){g.appendChild(cardBtn(x,poster(x)))});mw.appendChild(g);inn.appendChild(mw);
+    $('sScroll').scrollTop=0;
+    sheet.classList.add('on');back.classList.add('on');sheet.setAttribute('aria-hidden','false');document.body.classList.add('lock');$('sClose').focus();
+  }
+  function closeSheet(){sheet.classList.remove('on');back.classList.remove('on');sheet.setAttribute('aria-hidden','true');
+    if(!$('srch').classList.contains('on'))document.body.classList.remove('lock');if(lastFocus&&lastFocus.focus)lastFocus.focus()}
+  $('sClose').onclick=closeSheet;back.onclick=closeSheet;
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(sheet.classList.contains('on'))closeSheet();else closeSearch()}});
+
+  /* search */
+  var srch=$('srch'),sin=$('srchIn'),res=$('srchRes');
+  function drawSearch(){
+    res.replaceChildren();var q=sin.value.trim().toLowerCase();var n=0;
+    ITEMS.forEach(function(it){if(q&&JSON.stringify(it).toLowerCase().indexOf(q)<0)return;n++;res.appendChild(cardBtn(it,poster(it)))});
+    if(!n)res.appendChild(el('p','empty','Tidak ada hasil untuk "'+sin.value+'".'))}
+  function openSearch(){srch.classList.add('on');srch.setAttribute('aria-hidden','false');document.body.classList.add('lock');setNav('nSearch');drawSearch();sin.focus()}
+  function closeSearch(){srch.classList.remove('on');srch.setAttribute('aria-hidden','true');document.body.classList.remove('lock');setNav('nHome')}
+  sin.oninput=drawSearch;
+  function setNav(id){['nHome','nSearch','nNews'].forEach(function(n){$(n).setAttribute('aria-current',n===id)})}
+  $('nHome').onclick=function(){closeSearch();if(sheet.classList.contains('on'))closeSheet();window.scrollTo({top:0,behavior:'smooth'})};
+  $('nSearch').onclick=function(){if(srch.classList.contains('on'))closeSearch();else{if(sheet.classList.contains('on'))closeSheet();openSearch()}};
+  $('nNews').onclick=function(){closeSearch();openSheet('news')};
+})();
+</script>
+
+</body></html>
